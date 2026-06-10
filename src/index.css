@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body, #root {
+    height: 100%;
+  }
+
+  body {
+    font-family: 'Noto Sans SC', system-ui, sans-serif;
+    background-color: #FDF8F3;
+    color: #2D1F14;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Noto Serif SC', Georgia, serif;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #F5EBDF;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #D4B18A;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #BE8A5C;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-brand-700 transition-all duration-300 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply bg-paper border border-brand-300 text-brand-700 px-5 py-2.5 rounded-lg font-medium hover:bg-brand-50 transition-all duration-300;
+  }
+
+  .btn-leaf {
+    @apply bg-leaf-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-leaf-700 transition-all duration-300 active:scale-95;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-book transition-all duration-300;
+  }
+
+  .card-hover:hover {
+    @apply shadow-book-hover -translate-y-1;
+  }
+
+  .input-base {
+    @apply w-full px-4 py-2.5 rounded-lg border border-brand-200 bg-paper focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all duration-200;
+  }
+
+  .tag {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .tag-borrowing {
+    @apply bg-leaf-100 text-leaf-700;
+  }
+
+  .tag-returned {
+    @apply bg-brand-100 text-brand-700;
+  }
+
+  .tag-overdue {
+    @apply bg-red-100 text-red-700;
+  }
+
+  .section-title {
+    @apply text-2xl font-serif font-semibold text-ink flex items-center gap-2;
+  }
+}
