@@ -231,7 +231,7 @@ router.get('/users', authenticateToken, async (req: AdminRequest, res: Response)
     if (!await requireAdmin(req, res)) return
 
     const sql = `
-      SELECT id, username, nickname, avatar, role, createdAt
+      SELECT id, username, nickname, avatar, role, balance, createdAt
       FROM users
       ORDER BY createdAt DESC
     `

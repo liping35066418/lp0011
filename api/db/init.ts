@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
+import logger from '../middleware/logger.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -22,6 +23,17 @@ const db = new Database(dbPath)
 
 db.pragma('journal_mode = WAL')
 db.pragma('foreign_keys = ON')
+
+function migrateTables(): void {
+  const columns = db
+    .prepare("PRAGMA table_info(users)")
+    .all() as { name: string }[];
+  const hasBalance = columns.some((c) => c.name === "balance");
+  if (!hasBalance) {
+    db.exec("ALTER TABLE users ADD COLUMN balance REAL NOT NULL DEFAULT 100.0");
+    logger.info("Migrated: added balance column to users table");
+  }
+}
 
 function createTables(): void {
   db.exec(`
@@ -57,6 +69,7 @@ function createTables(): void {
       nickname TEXT NOT NULL,
       avatar TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'user',
+      balance REAL NOT NULL DEFAULT 100.0,
       createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -93,7 +106,8 @@ function createTables(): void {
       maxBorrowCount INTEGER NOT NULL DEFAULT 5,
       overdueFinePerDay REAL NOT NULL DEFAULT 0.5
     );
-  `)
+  `);
+  migrateTables();
 }
 
 function seedCategories(): void {

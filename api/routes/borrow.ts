@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from 'express'
 import db from '../db/init.js'
 import logger from '../middleware/logger.js'
 import { authenticateToken, getUserIdFromRequest } from './auth.js'
-import type { BorrowRecord, BorrowStatusSummary, Book } from '../../shared/types.js'
+import type { BorrowRecord, BorrowStatusSummary, Book, BorrowRules, ReturnResult } from '../../shared/types.js'
 
 const router = Router()
 
@@ -25,6 +25,29 @@ function checkOverdue(): number {
   }
   return updatedCount
 }
+
+router.get('/rules', (_req: Request, res: Response): void => {
+  try {
+    const rules = db.prepare('SELECT * FROM borrow_rules ORDER BY id DESC LIMIT 1').get() as BorrowRules | undefined
+    res.json({
+      code: 0,
+      message: 'success',
+      data: rules ?? {
+        maxBorrowDays: 30,
+        maxRenewTimes: 1,
+        maxBorrowCount: 5,
+        overdueFinePerDay: 0.5,
+      },
+    })
+  } catch (error) {
+    logger.error(`Get borrow rules error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    res.status(500).json({
+      code: -1,
+      message: error instanceof Error ? error.message : 'Server error',
+      data: null,
+    })
+  }
+})
 
 interface AuthRequest extends Request {
   userId?: number
@@ -348,8 +371,29 @@ router.put('/:id/return', authenticateToken, (req: AuthRequest, res: Response): 
         return { errorCode: 400, message: 'Book already returned' }
       }
 
+      const rules = db.prepare('SELECT * FROM borrow_rules ORDER BY id DESC LIMIT 1').get() as {
+        overdueFinePerDay: number
+      } | undefined
+      const finePerDay = rules?.overdueFinePerDay ?? 0.5
+
       const today = new Date()
       const returnDateStr = today.toISOString().split('T')[0]
+
+      const dueDate = new Date(record.dueDate)
+      dueDate.setHours(0, 0, 0, 0)
+      const todayDate = new Date(returnDateStr)
+      todayDate.setHours(0, 0, 0, 0)
+      const diffMs = todayDate.getTime() - dueDate.getTime()
+      const overdueDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+      const fineAmount = overdueDays > 0 ? Number((overdueDays * finePerDay).toFixed(2)) : 0
+
+      const userRow = db.prepare('SELECT balance FROM users WHERE id = ?').get(userId) as { balance: number } | undefined
+      const previousBalance = userRow?.balance ?? 0
+      const newBalance = Number((previousBalance - fineAmount).toFixed(2))
+
+      if (fineAmount > 0) {
+        db.prepare('UPDATE users SET balance = ? WHERE id = ?').run(newBalance, userId)
+      }
 
       db.prepare(
         "UPDATE borrow_records SET returnDate = ?, status = 'returned' WHERE id = ?"
@@ -365,7 +409,15 @@ router.put('/:id/return', authenticateToken, (req: AuthRequest, res: Response): 
       `
       const updatedRecord = db.prepare(recordSql).get(id) as BorrowRecord
 
-      return { errorCode: 0, message: 'Return success', data: updatedRecord }
+      const returnResult: ReturnResult = {
+        record: updatedRecord,
+        overdueDays,
+        fineAmount,
+        previousBalance,
+        newBalance,
+      }
+
+      return { errorCode: 0, message: 'Return success', data: returnResult }
     })
 
     const result = tx()
@@ -379,7 +431,8 @@ router.put('/:id/return', authenticateToken, (req: AuthRequest, res: Response): 
       return
     }
 
-    logger.info(`User ${userId} returned book, record ID: ${id}`)
+    const returnData = result.data as ReturnResult
+    logger.info(`User ${userId} returned book, record ID: ${id}, overdue: ${returnData.overdueDays} days, fine: ${returnData.fineAmount}`)
 
     res.json({
       code: 0,

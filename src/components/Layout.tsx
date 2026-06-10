@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   BookOpen,
@@ -14,6 +14,7 @@ import {
   User,
   Bell,
   ChevronRight,
+  Wallet,
 } from 'lucide-react';
 import { useUserStore } from '@/store/user';
 
@@ -22,7 +23,11 @@ export default function Layout() {
   const [searchValue, setSearchValue] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useUserStore();
+  const { user, logout, refreshUser } = useUserStore();
+
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
 
   const menuItems = [
     { path: '/', label: '首页', icon: Home },
@@ -92,6 +97,13 @@ export default function Layout() {
 
               {user ? (
                 <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200">
+                    <Wallet className="w-4 h-4 text-amber-600" />
+                    <div className="text-left leading-tight">
+                      <p className="text-[10px] text-amber-600 font-medium">账户余额</p>
+                      <p className="text-sm font-bold text-amber-700">¥ {user.balance?.toFixed(2) ?? '100.00'}</p>
+                    </div>
+                  </div>
                   <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-brand-50">
                     <img
                       src={user.avatar}
@@ -203,6 +215,15 @@ export default function Layout() {
                   <div>
                     <p className="font-medium text-ink text-sm">{user.nickname}</p>
                     <p className="text-xs text-ink-muted">ID: {user.id}</p>
+                  </div>
+                </div>
+                <div className="mb-3 p-2.5 rounded-lg bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Wallet className="w-3.5 h-3.5 text-amber-600" />
+                      <span className="text-xs font-medium text-amber-700">账户余额</span>
+                    </div>
+                    <span className="text-sm font-bold text-amber-700">¥ {user.balance?.toFixed(2) ?? '100.00'}</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center mb-3">

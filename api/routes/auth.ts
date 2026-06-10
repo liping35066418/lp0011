@@ -93,7 +93,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     )
     const result = stmt.run(username, hashedPassword, displayNickname, avatar, 'user')
 
-    const user = db.prepare('SELECT id, username, nickname, avatar, role FROM users WHERE id = ?').get(result.lastInsertRowid) as User
+    const user = db.prepare('SELECT id, username, nickname, avatar, role, balance FROM users WHERE id = ?').get(result.lastInsertRowid) as User
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
 
     logger.info(`User registered: ${username} (ID: ${user.id})`)
@@ -179,7 +179,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
 router.get('/me', authenticateToken, (req: Request & { userId?: number }, res: Response): void => {
   try {
     const userId = getUserIdFromRequest(req)
-    const user = db.prepare('SELECT id, username, nickname, avatar, role FROM users WHERE id = ?').get(userId) as User | undefined
+    const user = db.prepare('SELECT id, username, nickname, avatar, role, balance FROM users WHERE id = ?').get(userId) as User | undefined
 
     if (!user) {
       res.status(404).json({

@@ -67,6 +67,15 @@ export interface User {
   nickname: string;
   avatar: string;
   role: 'user' | 'admin';
+  balance: number;
+}
+
+export interface ReturnResult {
+  record: BorrowRecord;
+  overdueDays: number;
+  fineAmount: number;
+  previousBalance: number;
+  newBalance: number;
 }
 
 export interface PagedResponse<T> {
