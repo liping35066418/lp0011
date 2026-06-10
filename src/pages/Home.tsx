@@ -114,7 +114,7 @@ export default function Home() {
               ? 'bg-gradient-to-r from-red-50 to-red-100 border border-red-200'
               : 'bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200'
           }`}
-          onClick={() => navigate('/my-borrow')}
+          onClick={() => navigate('/my/borrow')}
         >
           <div
             className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
