@@ -25,7 +25,7 @@ router.get('/', (req: Request, res: Response): void => {
     const params: (string | number)[] = []
 
     if (keyword) {
-      conditions.push('(b.title LIKE ? OR b.author LIKE ? OR b.summary LIKE ?')
+      conditions.push('(b.title LIKE ? OR b.author LIKE ? OR b.summary LIKE ?)')
       const kw = `%${keyword}%`
       params.push(kw, kw, kw)
     }
